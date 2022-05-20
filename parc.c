@@ -44,10 +44,12 @@ int main(int argc, char const *argv[]) {
     attraction attractions[MAX_ATTRACTIONS];
 
     for (int i = 0; i < MAX_ATTRACTIONS; i++) {
+        attractions[i].numero = i;
         if (i%2 == 0) {
-            attractions[i].numero = i;
             attractions[i].libre = 1;
         }
+        attractions[i].libre = 0;
+
         sem_init(&attractions[i].semaphore, 0, 1);
 
     }
