@@ -9,6 +9,8 @@
 
 pthread_mutex_t mutexEntree = PTHREAD_MUTEX_INITIALIZER;
 
+//test
+
 typedef struct {
     int numero;
     int satisfaction;
