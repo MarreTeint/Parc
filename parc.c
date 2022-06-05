@@ -28,8 +28,8 @@ typedef struct {
 
 void *process_client(void *arg) {
     pthread_mutex_lock(&mutexEntree);
-    /*printf("Je suis le client n° %d\n", ((client*)arg)->numero);
-    printf("J'ai payé les 30 euros !\n");*/
+    printf("Je suis le client n° %d et je rentre dans le parc\n", ((client*)arg)->numero);
+    /*printf("J'ai payé les 30 euros !\n");*/
     pthread_mutex_unlock(&mutexEntree);
     while (true){
         int choix = rand()%3;
@@ -43,12 +43,12 @@ void *process_client(void *arg) {
         case 1: ;
             int attractNum = rand()%MAX_ATTRACTIONS;
             //process attraction
-            printf("Je suis le client n° %d et je vais à l'attraction n° %d s\n", ((client*)arg)->numero, attractNum);
+            printf("Je suis le client n° %d et je vais à l'attraction n° %d\n", ((client*)arg)->numero, attractNum);
             //Passe en suite dans l'allée à la fin de son attraction
         
         case 2: ;
             int howLong = rand()%5;
-            printf("Je suis le client n° %d et je reste dans l'allée %d\n", ((client*)arg)->numero, howLong);
+            printf("Je suis le client n° %d et je reste dans l'allée %d secondes\n", ((client*)arg)->numero, howLong);
             sleep(howLong);
             break;
         }
