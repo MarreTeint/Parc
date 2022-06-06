@@ -44,6 +44,7 @@ void *process_client(void *arg) {
             int attractNum = rand()%MAX_ATTRACTIONS;
             //process attraction
             printf("Je suis le client n° %d et je vais à l'attraction n° %d\n", ((client*)arg)->numero, attractNum);
+            process_attraction(attractNum);
             //Passe en suite dans l'allée à la fin de son attraction
         
         case 2: ;
@@ -56,16 +57,30 @@ void *process_client(void *arg) {
     }
 }
 
-void *process_attraction(void *arg) {
+void process_attraction(int idat) {
+    sem_wait(&attractions[idat].semaphore); //faire passer chez client les attractions
+    //While(sem != 0 AND file d'attente != 0){wait()}
+    if (attractions[idat].libre){
+        sleep(rand()%7);
+    }
+    else{
+        sleep(attractions[idat].duree);
+    }
+    sem_post(&attractions[idat].semaphore);
+}
+
+/*void *process_attraction(void *arg) {
     // sem_wait(& attraction.semaphore ici)
     //While(sem != 0 AND file d'attente != 0){wait()}
     sleep(1);//Mettre attraction.duree
     pthread_exit(NULL);
-}
+}*/
 
 void affichage(){
     //TODO Pour chaque attraction & l'accueil, recuperer le nombre de personne en file d'attente + le nombre de personne dedans
 }
+
+
 
 int main(int argc, char const *argv[]) {
     int caisse = 0;
@@ -105,6 +120,8 @@ int main(int argc, char const *argv[]) {
     }
     caisse+=caisseJour;
     //TODO pas oublier le prix d'entrée
+
+
 
     return 0;
 }
