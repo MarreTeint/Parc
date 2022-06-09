@@ -26,17 +26,22 @@ typedef struct {
     sem_t semaphore;
 } attraction;
 
+attraction attractions[MAX_ATTRACTIONS];
+int caisse = 0;
+int caisseJour=0;
+
 void *process_client(void *arg) {
     pthread_mutex_lock(&mutexEntree);
-    // printf("Je suis le client n° %d et je rentre dans le parc\n", ((client*)arg)->numero);
-    /*printf("J'ai payé les 30 euros !\n");*/
+    //printf("Je suis le client n° %d et je rentre dans le parc\n", ((client*)arg)->numero);
+    caisseJour = caisseJour+30;
+    //printf("J'ai payé les 30 euros !\n");
     pthread_mutex_unlock(&mutexEntree);
     while (true){
         int choix = rand()%3;
         switch (choix)
         {
         case 0:
-            // printf("Je suis le client n° %d et je sors du parc\n", ((client*)arg)->numero);
+            //printf("Je suis le client n° %d et je sors du parc\n", ((client*)arg)->numero);
             pthread_exit(NULL);
             break;
         
@@ -80,15 +85,17 @@ void affichage(){
     //TODO Pour chaque attraction & l'accueil, recuperer le nombre de personne en file d'attente + le nombre de personne dedans
 }
 
+
+
 int main(int argc, char const *argv[]) {
     char prochainJour = 'n';
-    int caisse = 0;
+    
     srand(time(NULL));
     int nbClients = rand()%MAX_CLIENTS+10;
-    int caisseJour;
+    
     int nbJour = 0;
     client clients[nbClients];
-    attraction attractions[MAX_ATTRACTIONS];
+   
 
     //initialisation des attractions et des clients 
     for (int i = 0; i < MAX_ATTRACTIONS; i++) {
@@ -100,34 +107,39 @@ int main(int argc, char const *argv[]) {
 
         sem_init(&attractions[i].semaphore, 0, 1);
 
-    }//pas oublier de vider les actractions à la fin du jour
+    }
+    //pas oublier de vider les actractions à la fin du jour
 
-    for (int i = 0; i < nbClients; i++) {
+    
+
+
+    do {
+        nbJour++;
+        caisseJour = 0;
+        for (int i = 0; i < nbClients; i++) {
         // sleep(0.01);
         clients[i].numero = i;
         clients[i].satisfaction = 100;
         clients[i].argent = 100;
         pthread_create(&clients[i].thread, NULL, &process_client, &clients[i]);
     }
-
+        for (int i = 0; i < nbClients; i++) {
+        pthread_join(clients[i].thread, NULL);
+    }
     printf("Nombre de clients aujourd'hui: %d\n", nbClients);
-
-
-    do {
-        nbJour++;
 
         time_t fin;//en seconde
         time_t debut;
         fin = time(NULL) + 5;
         debut = time(NULL);
-        caisseJour = 0;
+        
         printf("Nombre de clients aujourd'hui: %d\n", nbClients);
 
         while ((fin - debut) > 0) {
             debut = time(NULL);
         
         }
-
+        caisse= caisse+caisseJour;
         printf("Fin journée n° %d, Chiffre d'affaires du jour : %d €\n", nbJour, caisseJour);
         
         printf("Jour suivant ? (o/n) \n");
@@ -138,10 +150,8 @@ int main(int argc, char const *argv[]) {
 
 
     //Fin de la journée
-    for (int i = 0; i < nbClients; i++) {
-        pthread_join(clients[i].thread, NULL);
-    }
-    caisse+=caisseJour;
+    
+    
 
     printf("Caisse du parc au bout de %d jour(s): %d € \n",nbJour, caisse);
     return 0;
