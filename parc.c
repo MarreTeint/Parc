@@ -36,11 +36,11 @@ void affichage(){
     //num=attractions[idat].capacite-file; ==> Pour affichage
     //Pour la file, faire un compteur de personne en file
     system("clear");
-    printf('_________________________________________________\n|                                               |');
-    for(int i=0;i<MAX_ATTRACTIONS;i++){
+    printf("_________________________________________________\n|                                               |\n");
+    /*for(int i=0;i<MAX_ATTRACTIONS;i++){
       
-    }
-    printf('|                                               |\n_________________________________________________');
+    }*/
+    printf("|                                               |\n_________________________________________________\n");
     printf("Nombre de client(s) dans le parc : %d \n", nbClients);
     
 
@@ -157,12 +157,12 @@ int main(int argc, char const *argv[]) {
       }
       
       
-      while ((fin - debut) > 0) {
+      /*while ((fin - debut) > 0) {
         debut = time(NULL);
         if (debut%10 == 0) {
           affichage();
         }
-      }
+      }*/
       
       
         for (int i = 0; i < nbClients; i++) {
