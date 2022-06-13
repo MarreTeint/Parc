@@ -24,38 +24,50 @@ typedef struct {
     int capacite;
     int duree;
     bool enCours;
+    bool terminee; 
     sem_t semaphore;
 } attraction;
 
 attraction attractions[MAX_ATTRACTIONS];
 int caisse = 0;
 int caisseJour=0;
+int nbClients = 0;
+
+void affichage(){
+    //TODO Pour chaque attraction & l'accueil, recuperer le nombre de personne en file d'attente + le nombre de personne dedans
+    //num=attractions[idat].capacite-file; ==> Pour affichage
+    //Pour la file, faire un compteur de personne en file
+    system("clear");
+    printf("Nombre de client(s) dans le parc : %d \n", nbClients);
+    
+
+}
 
 void *process_client(void *arg) {
     pthread_mutex_lock(&mutexEntree);
     //printf("Je suis le client n° %d et je rentre dans le parc\n", ((client*)arg)->numero);
     caisseJour = caisseJour+30;
+    nbClients++;
     //printf("J'ai payé les 30 euros !\n");
     pthread_mutex_unlock(&mutexEntree);
     while (true){
+        affichage();
         int choix = rand()%3;
         switch (choix)
         {
         case 0:
             //printf("Je suis le client n° %d et je sors du parc\n", ((client*)arg)->numero);
+            nbClients--;
             pthread_exit(NULL);
             break;
         
         case 1: ;
-            int attractNum = 8/*rand()%MAX_ATTRACTIONS*/;
-            //process attraction
-
-            //TODO Possiblement mettre le code de process attraction dans la case car pbl, le sémaphore ne relache les personnes que une par une et non tout celle de l'attraction d'un coup
-            printf("Je suis le client n° %d et je vais à l'attraction n° %d\n", ((client*)arg)->numero, attractNum);
-            sem_wait(&attractions[attractNum].semaphore);
+            int attractNum = rand()%MAX_ATTRACTIONS;
+            //printf("Je suis le client n° %d et je vais à l'attraction n° %d\n", ((client*)arg)->numero, attractNum);
+            
             process_attraction(attractNum);
-            sem_post(&attractions[attractNum].semaphore);
-            printf("Je suis le client n° %d et je sors à l'attraction n° %d\n", ((client*)arg)->numero, attractNum);
+            
+            //printf("Je suis le client n° %d et je sors à l'attraction n° %d\n", ((client*)arg)->numero, attractNum);
             //Passe en suite dans l'allée à la fin de son attraction
         
         case 2: ;
@@ -68,45 +80,34 @@ void *process_client(void *arg) {
     }
 }
 
-bool printed = false;
 
+// possiblement faire un seul sleep pour touts les clients
 void process_attraction(int idat) {
-     //faire passer chez client les attractions
-    int file,lastfile;
+    
+    int file;
     sem_getvalue(&attractions[idat].semaphore, &file);
-    int num;
-    while(file > 0 && file != lastfile || attractions[idat].enCours){
-        sleep(3);
-        lastfile = file;
-        sem_getvalue(&attractions[idat].semaphore, &file);
-    }
+
+    //int num;
+    
+    //printf("Je rentre\n");
     if (attractions[idat].libre){
         sleep(rand()%7);
     }
     else{
-        num=attractions[idat].capacite-file;
-        attractions[idat].enCours = true;
-        if(!printed){
-            printf("Attraction n° %d en cours avec %d personnes\n", idat, num);
-            printed = true;
-        }
+        sem_wait(&attractions[idat].semaphore);
+        
+        //printf("Attraction n° %d en cours\n", idat);
+        attractions[idat].enCours=true;
         sleep(attractions[idat].duree);
-    }
-    
-    if(printed){
-        printf("Attraction n° %d finie\n", idat);
-        printed = false;
-    }
-
-    if(file==0){    
-        attractions[idat].enCours = false;
+        attractions[idat].enCours=false;
+        
+        //printf("Attraction n° %d finie\n", idat);
+        sem_post(&attractions[idat].semaphore);
     }
 }
 
 
-void affichage(){
-    //TODO Pour chaque attraction & l'accueil, recuperer le nombre de personne en file d'attente + le nombre de personne dedans
-}
+
 
 
 
@@ -130,7 +131,9 @@ int main(int argc, char const *argv[]) {
         attractions[i].capacite = rand()%10+1;
         attractions[i].duree = rand()%10+1;
         attractions[i].enCours = false;
+        attractions[i].terminee = false;
         sem_init(&attractions[i].semaphore, 0, attractions[i].capacite);
+
 
     }
     //pas oublier de vider les actractions à la fin du jour
