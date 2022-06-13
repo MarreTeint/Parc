@@ -23,8 +23,6 @@ typedef struct {
     bool libre;
     int capacite;
     int duree;
-    bool enCours;
-    bool terminee; 
     sem_t semaphore;
 } attraction;
 
@@ -38,6 +36,11 @@ void affichage(){
     //num=attractions[idat].capacite-file; ==> Pour affichage
     //Pour la file, faire un compteur de personne en file
     system("clear");
+    printf('_________________________________________________\n|                                               |');
+    for(int i=0;i<MAX_ATTRACTIONS;i++){
+      
+    }
+    printf('|                                               |\n_________________________________________________');
     printf("Nombre de client(s) dans le parc : %d \n", nbClients);
     
 
@@ -97,9 +100,9 @@ void process_attraction(int idat) {
         sem_wait(&attractions[idat].semaphore);
         
         //printf("Attraction n° %d en cours\n", idat);
-        attractions[idat].enCours=true;
+
         sleep(attractions[idat].duree);
-        attractions[idat].enCours=false;
+
         
         //printf("Attraction n° %d finie\n", idat);
         sem_post(&attractions[idat].semaphore);
@@ -119,7 +122,10 @@ int main(int argc, char const *argv[]) {
     
     int nbJour = 0;
     client clients[nbClients];
-   
+    time_t fin; // en seconde
+    time_t debut;
+    fin = time(NULL) + 180;
+    debut = time(NULL);
 
     //initialisation des attractions et des clients 
     for (int i = 0; i < MAX_ATTRACTIONS; i++) {
@@ -130,8 +136,6 @@ int main(int argc, char const *argv[]) {
         attractions[i].libre = false;
         attractions[i].capacite = rand()%10+1;
         attractions[i].duree = rand()%10+1;
-        attractions[i].enCours = false;
-        attractions[i].terminee = false;
         sem_init(&attractions[i].semaphore, 0, attractions[i].capacite);
 
 
@@ -142,31 +146,35 @@ int main(int argc, char const *argv[]) {
 
 
     do {
-        nbJour++;
-        caisseJour = 0;
-        for (int i = 0; i < nbClients; i++) {
-        // sleep(0.01);
+      nbJour++;
+      caisseJour = 0;
+      for (int i = 0; i < nbClients; i++) {
+      // sleep(0.01);
         clients[i].numero = i;
         clients[i].satisfaction = 100;
         clients[i].argent = 100;
         pthread_create(&clients[i].thread, NULL, &process_client, &clients[i]);
-    }
+      }
+      
+      
+      while ((fin - debut) > 0) {
+        debut = time(NULL);
+        if (debut%10 == 0) {
+          affichage();
+        }
+      }
+      
+      
         for (int i = 0; i < nbClients; i++) {
         pthread_join(clients[i].thread, NULL);
     }
     printf("Nombre de clients aujourd'hui: %d\n", nbClients);
 
-        time_t fin;//en seconde
-        time_t debut;
-        fin = time(NULL) + 5;
-        debut = time(NULL);
+        
         
         printf("Nombre de clients aujourd'hui: %d\n", nbClients);
 
-       /* while ((fin - debut) > 0) {
-            debut = time(NULL);
         
-        }*/
         caisse= caisse+caisseJour;
         printf("Fin journée n° %d, Chiffre d'affaires du jour : %d €\n", nbJour, caisseJour);
         
