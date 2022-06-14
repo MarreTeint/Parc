@@ -6,10 +6,11 @@
 #include <stdbool.h>
 
 //constante pour le nombre de threads clients max, la journée dans le parc, nb attractions
-#define MAX_CLIENTS 10
+#define MAX_CLIENTS 1000
 #define MAX_ATTRACTIONS 10
 
 pthread_mutex_t mutexEntree = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t affiche = PTHREAD_MUTEX_INITIALIZER;
 
 typedef struct {
     int numero;
@@ -23,26 +24,39 @@ typedef struct {
     bool libre;
     int capacite;
     int duree;
+    int placeLibre;
+    int file;
     sem_t semaphore;
 } attraction;
 
 attraction attractions[MAX_ATTRACTIONS];
 int caisse = 0;
 int caisseJour=0;
-int nbClients = 0;
+int nbClients;
+int nbClientsIn = 0;
+int nbClientsOut = 0;
+int nbClientsInAllee = 0;
 
 void affichage(){
     //TODO Pour chaque attraction & l'accueil, recuperer le nombre de personne en file d'attente + le nombre de personne dedans
     //num=attractions[idat].capacite-file; ==> Pour affichage
     //Pour la file, faire un compteur de personne en file
+    pthread_mutex_lock(&affiche);
     system("clear");
-    printf("_________________________________________________\n|                                               |\n");
-    /*for(int i=0;i<MAX_ATTRACTIONS;i++){
-      
-    }*/
-    printf("|                                               |\n_________________________________________________\n");
-    printf("Nombre de client(s) dans le parc : %d \n", nbClients);
+    printf("Client(s) dans le parc : %d\nFile d'attente d'entrée : %d\nNombre de clients dans les alléees : %d\n", nbClientsIn, nbClients-nbClientsIn-nbClientsOut, nbClientsInAllee);
+    for(int i=0; i<MAX_ATTRACTIONS; i++){
+        printf("Attraction n°%d : %d clients ", attractions[i].numero, attractions[i].capacite-attractions[i].placeLibre);
+
+        if (!attractions[i].libre){
+            printf("/ %d clients \nFile d'attente de l'attraction : %d clients\n",attractions[i].capacite, attractions[i].file);
+        }
+        else{
+            printf("\n");
+        }
+    }
+    printf("\n");
     
+    pthread_mutex_unlock(&affiche);
 
 }
 
@@ -50,9 +64,13 @@ void *process_client(void *arg) {
     pthread_mutex_lock(&mutexEntree);
     //printf("Je suis le client n° %d et je rentre dans le parc\n", ((client*)arg)->numero);
     caisseJour = caisseJour+30;
-    nbClients++;
+    nbClientsIn++;
+    nbClientsInAllee++;
+    affichage();
     //printf("J'ai payé les 30 euros !\n");
     pthread_mutex_unlock(&mutexEntree);
+    nbClientsInAllee--;
+    affichage();
     while (true){
         affichage();
         int choix = rand()%3;
@@ -60,7 +78,9 @@ void *process_client(void *arg) {
         {
         case 0:
             //printf("Je suis le client n° %d et je sors du parc\n", ((client*)arg)->numero);
-            nbClients--;
+            nbClientsIn--;
+            nbClientsOut++;
+            affichage();
             pthread_exit(NULL);
             break;
         
@@ -74,9 +94,13 @@ void *process_client(void *arg) {
             //Passe en suite dans l'allée à la fin de son attraction
         
         case 2: ;
+            nbClientsInAllee++;
+             affichage();
             int howLong = rand()%5;
             // printf("Je suis le client n° %d et je reste dans l'allée %d secondes\n", ((client*)arg)->numero, howLong);
             sleep(howLong);
+            nbClientsInAllee--;
+             affichage();
             break;
         }
             
@@ -86,10 +110,6 @@ void *process_client(void *arg) {
 
 // possiblement faire un seul sleep pour touts les clients
 void process_attraction(int idat) {
-    
-    int file;
-    sem_getvalue(&attractions[idat].semaphore, &file);
-
     //int num;
     
     //printf("Je rentre\n");
@@ -97,8 +117,13 @@ void process_attraction(int idat) {
         sleep(rand()%7);
     }
     else{
+        attractions[idat].file++;
+         affichage();
         sem_wait(&attractions[idat].semaphore);
-        
+        attractions[idat].file--;
+         affichage();
+        sem_getvalue(&attractions[idat].semaphore, &attractions[idat].placeLibre);     
+         affichage();  
         //printf("Attraction n° %d en cours\n", idat);
 
         sleep(attractions[idat].duree);
@@ -106,6 +131,9 @@ void process_attraction(int idat) {
         
         //printf("Attraction n° %d finie\n", idat);
         sem_post(&attractions[idat].semaphore);
+
+        sem_getvalue(&attractions[idat].semaphore, &attractions[idat].placeLibre);  
+         affichage();
     }
 }
 
@@ -118,7 +146,7 @@ int main(int argc, char const *argv[]) {
     char prochainJour = 'n';
     
     srand(time(NULL));
-    int nbClients = rand()%MAX_CLIENTS+10;
+    nbClients = rand()%MAX_CLIENTS+10;
     
     int nbJour = 0;
     client clients[nbClients];
@@ -133,9 +161,10 @@ int main(int argc, char const *argv[]) {
         if (i%2 == 0) {
             attractions[i].libre = true;
         }
-        attractions[i].libre = false;
+        attractions[i].libre = rand()%2;
         attractions[i].capacite = rand()%10+1;
         attractions[i].duree = rand()%10+1;
+        attractions[i].placeLibre = attractions[i].capacite;
         sem_init(&attractions[i].semaphore, 0, attractions[i].capacite);
 
 
@@ -156,6 +185,7 @@ int main(int argc, char const *argv[]) {
         pthread_create(&clients[i].thread, NULL, &process_client, &clients[i]);
       }
       
+     // affichage();
       
       /*while ((fin - debut) > 0) {
         debut = time(NULL);
@@ -168,6 +198,7 @@ int main(int argc, char const *argv[]) {
         for (int i = 0; i < nbClients; i++) {
         pthread_join(clients[i].thread, NULL);
     }
+    affichage();
     printf("Nombre de clients aujourd'hui: %d\n", nbClients);
 
         
@@ -176,6 +207,9 @@ int main(int argc, char const *argv[]) {
 
         
         caisse= caisse+caisseJour;
+        nbClientsIn = 0;
+        nbClientsOut = 0;
+        nbClientsInAllee = 0;
         printf("Fin journée n° %d, Chiffre d'affaires du jour : %d €\n", nbJour, caisseJour);
         
         printf("Jour suivant ? (o/n) \n");
