@@ -166,7 +166,6 @@ int main(int argc, char const *argv[]) {
         // sleep(0.01);
         clients[i].numero = i;
         clients[i].satisfaction = 100;
-        clients[i].argent = 100;
     }
 
     do {
@@ -184,7 +183,7 @@ int main(int argc, char const *argv[]) {
         while (nbClientsIn > 0 || !start) {
           affichage();
           sleep(1);
-          debut = time(NULL);
+         // debut = time(NULL);
         }
 
         for (int i = 0; i < nbClients; i++) {
