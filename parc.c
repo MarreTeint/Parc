@@ -150,9 +150,6 @@ int main(int argc, char const *argv[]) {
     //initialisation des attractions et des clients
     for (int i = 0; i < MAX_ATTRACTIONS; i++) {
         attractions[i].numero = i;
-        if (i%2 == 0) {
-            attractions[i].libre = true;
-        }
         attractions[i].libre = rand()%2;
         attractions[i].capacite = rand()%10+1;
         attractions[i].duree = rand()%10+1;
@@ -173,7 +170,7 @@ int main(int argc, char const *argv[]) {
         caisseJour = 0;
         //seul les clients satisfaits reviennent, s'ils ont une satisfaction < 60, ils ne reviendront pas
         for (int i = 0; i < nbClients; i++) {
-            if (clients[i].satisfaction > 90) {
+            if (clients[i].satisfaction > 50) {
                 pthread_create(&clients[i].thread, NULL, &process_client, &clients[i]);
             } else {
                 printf("Client n°%d ne reviendra pas : satisfaction : %d\n", clients[i].numero, clients[i].satisfaction);
