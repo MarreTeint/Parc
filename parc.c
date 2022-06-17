@@ -193,10 +193,12 @@ int main(int argc, char const *argv[]) {
         nbClientsIn = 0;
         nbClientsOut = 0;
         nbClientsInAllee = 0;
+        start = false;
         printf("Fin journée n° %d, Chiffre d'affaires du jour : %d €\n", nbJour, caisseJour);
 
         printf("Jour suivant ? (o/n) \n");
         scanf(" %c", &prochainJour);
+
     } while  (prochainJour == 'o');
 
     printf("Caisse du parc au bout de %d jour(s): %d € \n",nbJour, caisse);
