@@ -16,7 +16,7 @@ time_t debut;
 
 
 pthread_mutex_t mutexEntree = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t affiche = PTHREAD_MUTEX_INITIALIZER;
+
 
 typedef struct {
     int numero;
@@ -42,12 +42,14 @@ int nbClients;
 int nbClientsIn = 0;
 int nbClientsOut = 0;
 int nbClientsInAllee = 0;
+bool start = false;
+
 
 void affichage(){
     //TODO Pour chaque attraction & l'accueil, recuperer le nombre de personne en file d'attente + le nombre de personne dedans
     //num=attractions[idat].capacite-file; ==> Pour affichage
     //Pour la file, faire un compteur de personne en file
-    pthread_mutex_lock(&affiche);
+
     system("clear");
     printf("Client(s) dans le parc : %d\nFile d'attente d'entrée : %d\nNombre de clients dans les alléees : %d\n", nbClientsIn, nbClients-nbClientsIn-nbClientsOut, nbClientsInAllee);
     for(int i=0; i<MAX_ATTRACTIONS; i++){
@@ -60,13 +62,13 @@ void affichage(){
     }
     printf("\n");
 
-    pthread_mutex_unlock(&affiche);
 
 }
 
 void *process_client(void *arg) {
     pthread_mutex_lock(&mutexEntree);
     //printf("Je suis le client n° %d et je rentre dans le parc\n", ((client*)arg)->numero);
+    bool start = true;
     caisseJour = caisseJour+30;
     nbClientsIn++;
     nbClientsInAllee++;
@@ -183,7 +185,7 @@ int main(int argc, char const *argv[]) {
 
         // affichage();
 
-        while ((fin - debut) > 0) {
+        while (nbClientsIn > 0 || !start) {
           affichage();
           sleep(1);
           debut = time(NULL);
