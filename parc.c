@@ -30,7 +30,7 @@ typedef struct {
     bool libre;
     int capacite;
     int duree;
-    int placeLibre;
+    int clientIn;
     int file;
     sem_t semaphore;
 } attraction;
@@ -52,10 +52,10 @@ void affichage(){
     printf("Client(s) dans le parc : %d\nFile d'attente d'entrée : %d\nNombre de clients dans les alléees : %d\n", nbClientsIn, nbClients-nbClientsIn-nbClientsOut, nbClientsInAllee);
     for(int i=0; i<MAX_ATTRACTIONS; i++){
         if (!attractions[i].libre){
-            printf("Attraction n°%d : %d clients / %d clients \nFile d'attente de l'attraction : %d clients\n",attractions[i].numero, attractions[i].capacite-attractions[i].placeLibre,attractions[i].capacite, attractions[i].file);
+            printf("Attraction n°%d : %d clients / %d clients \nFile d'attente de l'attraction : %d clients\n",attractions[i].numero, attractions[i].clientIn,attractions[i].capacite, attractions[i].file);
         }
         else{
-            printf("Attraction n°%d : %d clients \n",attractions[i].numero, attractions[i].file);
+            printf("Attraction n°%d : %d clients \n",attractions[i].numero, attractions[i].clientIn);
         }
     }
     printf("\n");
@@ -112,15 +112,15 @@ void process_attraction(int idat) {
 
     //printf("Je rentre\n");
     if (attractions[idat].libre){
-        attractions[idat].file++;
+        attractions[idat].clientIn++;
         sleep(rand()%7);
-        attractions[idat].file--;
+        attractions[idat].clientIn--;
     }
     else{
         attractions[idat].file++;
         sem_wait(&attractions[idat].semaphore);
         attractions[idat].file--;
-        sem_getvalue(&attractions[idat].semaphore, &attractions[idat].placeLibre);
+        attractions[idat].clientIn++;
         //printf("Attraction n° %d en cours\n", idat);
 
         sleep(attractions[idat].duree);
@@ -129,7 +129,7 @@ void process_attraction(int idat) {
         //printf("Attraction n° %d finie\n", idat);
         sem_post(&attractions[idat].semaphore);
 
-        sem_getvalue(&attractions[idat].semaphore, &attractions[idat].placeLibre);
+        attractions[idat].clientIn--;
     }
 }
 
@@ -160,7 +160,7 @@ int main(int argc, char const *argv[]) {
         attractions[i].libre = rand()%2;
         attractions[i].capacite = rand()%10+1;
         attractions[i].duree = rand()%10+1;
-        attractions[i].placeLibre = attractions[i].capacite;
+        attractions[i].clientIn = 0;
         sem_init(&attractions[i].semaphore, 0, attractions[i].capacite);
 
 
