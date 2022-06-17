@@ -71,10 +71,10 @@ void *process_client(void *arg) {
     bool start = true;
     caisseJour = caisseJour+30;
     nbClientsIn++;
-    nbClientsInAllee++;
+
     //printf("J'ai payé les 30 euros !\n");
     pthread_mutex_unlock(&mutexEntree);
-    nbClientsInAllee--;
+
     while (true){
         int choix = rand()%3;
         switch (choix)
