@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 //constante pour le nombre de threads clients max, la journée dans le parc, nb attractions
-#define MAX_CLIENTS 1000
+#define MAX_CLIENTS 100
 #define MAX_ATTRACTIONS 10
 //#define DUREE_JOURNEE 60
 
@@ -21,6 +21,7 @@ pthread_mutex_t mutexEntree = PTHREAD_MUTEX_INITIALIZER;
 typedef struct {
     int numero;
     int satisfaction;
+    int patience;
     pthread_t thread;
 } client;
 
@@ -41,6 +42,7 @@ int nbClients;
 int nbClientsIn = 0;
 int nbClientsOut = 0;
 int nbClientsInAllee = 0;
+float satisfactionTotal = 0;
 bool start = false;
 
 
@@ -74,11 +76,24 @@ void process_attraction(int idat, client* c) {
         sem_wait(&attractions[idat].semaphore);
 //        sleep(11);
         time_t finAttente = time(NULL);
-        if (finAttente-debutAttente > 10){
+        if (finAttente-debutAttente > c->patience){
 //            printf("Client n°%d : %d secondes d'attente pour rentrer dans l'attraction\n", c->numero, finAttente-debutAttente);
-            c->satisfaction = c->satisfaction - 10;
-            printf("Client n°%d : %d satisfaction\n", c->numero, c->satisfaction);
+            c->satisfaction -= 10;
+//            printf("Client n°%d : %d satisfaction\n", c->numero, c->satisfaction);
+        } else {
+//            printf("Client content n°%d : %d secondes d'attente pour rentrer dans l'attraction, patience %d\n", c->numero, finAttente-debutAttente, c->patience);
+            //hausse de la satisfaction du client uniquement si l'attente est beaucoup plus courte (2x) que son niveau de patience
+            if (finAttente-debutAttente < (c->patience/2)) {
+                c->satisfaction += 1;
+                if (c->satisfaction > 100) {
+                    c->satisfaction = 100;
+                } else if (c->satisfaction < 0) {
+                    c->satisfaction = 0;
+                }
+            }
+//            printf("Client content n°%d : %d satisfaction\n", c->numero, c->satisfaction);
         }
+
         attractions[idat].file--;
         attractions[idat].clientIn++;
         //printf("Attraction n° %d en cours\n", idat);
@@ -163,6 +178,7 @@ int main(int argc, char const *argv[]) {
         // sleep(0.01);
         clients[i].numero = i;
         clients[i].satisfaction = 100;
+        clients[i].patience = rand()%10+1;
     }
 
     do {
@@ -194,8 +210,13 @@ int main(int argc, char const *argv[]) {
         nbClientsOut = 0;
         nbClientsInAllee = 0;
         start = false;
+        satisfactionTotal = 0;
+        for (int i = 0; i < nbClients; i++) {
+            // sleep(0.01);
+            satisfactionTotal += clients[i].satisfaction;
+        }
         printf("Fin journée n° %d, Chiffre d'affaires du jour : %d €\n", nbJour, caisseJour);
-
+        printf("Satisfaction moyenne : %f\n", satisfactionTotal/(float)nbClients);
         printf("Jour suivant ? (o/n) \n");
         scanf(" %c", &prochainJour);
 
