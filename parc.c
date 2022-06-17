@@ -22,7 +22,6 @@ typedef struct {
     int numero;
     int satisfaction;
     pthread_t thread;
-    int argent; //<- vraiment utile ?
 } client;
 
 typedef struct {
