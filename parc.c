@@ -8,11 +8,11 @@
 //constante pour le nombre de threads clients max, la journée dans le parc, nb attractions
 #define MAX_CLIENTS 1000
 #define MAX_ATTRACTIONS 10
-#define DUREE_JOURNEE 60
+//#define DUREE_JOURNEE 60
 
 //gestion du temps
-time_t fin; // en seconde
-time_t debut;
+//time_t fin; // en seconde
+//time_t debut;
 
 
 pthread_mutex_t mutexEntree = PTHREAD_MUTEX_INITIALIZER;
@@ -46,11 +46,8 @@ bool start = false;
 
 
 void affichage(){
-    //TODO Pour chaque attraction & l'accueil, recuperer le nombre de personne en file d'attente + le nombre de personne dedans
-    //num=attractions[idat].capacite-file; ==> Pour affichage
-    //Pour la file, faire un compteur de personne en file
 
-    system("clear");
+//    system("clear");
     printf("Client(s) dans le parc : %d\nFile d'attente d'entrée : %d\nNombre de clients dans les alléees : %d\n", nbClientsIn, nbClients-nbClientsIn-nbClientsOut, nbClientsInAllee);
     for(int i=0; i<MAX_ATTRACTIONS; i++){
         if (!attractions[i].libre){
@@ -60,15 +57,47 @@ void affichage(){
             printf("Attraction n°%d : %d clients \n",attractions[i].numero, attractions[i].clientIn);
         }
     }
-    printf("\n");
+    printf("-------------------------------\n");
 
 
 }
 
+void process_attraction(int idat, client* c) {
+    //printf("Je rentre\n");
+    if (attractions[idat].libre){
+        attractions[idat].clientIn++;
+        sleep(rand()%7);
+        attractions[idat].clientIn--;
+    }
+    else{
+        attractions[idat].file++;
+        time_t debutAttente = time(NULL);
+        sem_wait(&attractions[idat].semaphore);
+//        sleep(11);
+        time_t finAttente = time(NULL);
+        if (finAttente-debutAttente > 10){
+//            printf("Client n°%d : %d secondes d'attente pour rentrer dans l'attraction\n", c->numero, finAttente-debutAttente);
+            c->satisfaction = c->satisfaction - 10;
+            printf("Client n°%d : %d satisfaction\n", c->numero, c->satisfaction);
+        }
+        attractions[idat].file--;
+        attractions[idat].clientIn++;
+        //printf("Attraction n° %d en cours\n", idat);
+
+        sleep(attractions[idat].duree);
+
+        //printf("Attraction n° %d finie\n", idat);
+        sem_post(&attractions[idat].semaphore);
+
+        attractions[idat].clientIn--;
+    }
+}
+
+
 void *process_client(void *arg) {
     pthread_mutex_lock(&mutexEntree);
     //printf("Je suis le client n° %d et je rentre dans le parc\n", ((client*)arg)->numero);
-    bool start = true;
+    start = true;
     caisseJour = caisseJour+30;
     nbClientsIn++;
 
@@ -90,7 +119,7 @@ void *process_client(void *arg) {
                 int attractNum = rand()%MAX_ATTRACTIONS;
                 //printf("Je suis le client n° %d et je vais à l'attraction n° %d\n", ((client*)arg)->numero, attractNum);
 
-                process_attraction(attractNum);
+                process_attraction(attractNum, (client*)arg);
 
                 //printf("Je suis le client n° %d et je sors à l'attraction n° %d\n", ((client*)arg)->numero, attractNum);
                 //Passe en suite dans l'allée à la fin de son attraction
@@ -107,39 +136,6 @@ void *process_client(void *arg) {
     }
 }
 
-
-// possiblement faire un seul sleep pour touts les clients
-void process_attraction(int idat) {
-    //int num;
-
-    //printf("Je rentre\n");
-    if (attractions[idat].libre){
-        attractions[idat].clientIn++;
-        sleep(rand()%7);
-        attractions[idat].clientIn--;
-    }
-    else{
-        attractions[idat].file++;
-        sem_wait(&attractions[idat].semaphore);
-        attractions[idat].file--;
-        attractions[idat].clientIn++;
-        //printf("Attraction n° %d en cours\n", idat);
-
-        sleep(attractions[idat].duree);
-
-
-        //printf("Attraction n° %d finie\n", idat);
-        sem_post(&attractions[idat].semaphore);
-
-        attractions[idat].clientIn--;
-    }
-}
-
-
-
-
-
-
 int main(int argc, char const *argv[]) {
     char prochainJour = 'n';
 
@@ -148,10 +144,9 @@ int main(int argc, char const *argv[]) {
 
     int nbJour = 0;
     client clients[nbClients];
-    time_t fin; // en seconde
-    time_t debut;
-    fin = time(NULL) + 180;
-    debut = time(NULL);
+
+//    fin = time(NULL) + 180;
+//    debut = time(NULL);
 
     //initialisation des attractions et des clients
     for (int i = 0; i < MAX_ATTRACTIONS; i++) {
@@ -167,42 +162,37 @@ int main(int argc, char const *argv[]) {
 
 
     }
-    //pas oublier de vider les actractions à la fin du jour
-
-
-
+    //initialisation des clients
+    for (int i = 0; i < nbClients; i++) {
+        // sleep(0.01);
+        clients[i].numero = i;
+        clients[i].satisfaction = 100;
+        clients[i].argent = 100;
+    }
 
     do {
         nbJour++;
         caisseJour = 0;
+        //seul les clients satisfaits reviennent, s'ils ont une satisfaction < 60, ils ne reviendront pas
         for (int i = 0; i < nbClients; i++) {
-            // sleep(0.01);
-            clients[i].numero = i;
-            clients[i].satisfaction = 100;
-            clients[i].argent = 100;
-            pthread_create(&clients[i].thread, NULL, &process_client, &clients[i]);
+            if (clients[i].satisfaction > 90) {
+                pthread_create(&clients[i].thread, NULL, &process_client, &clients[i]);
+            } else {
+                printf("Client n°%d ne reviendra pas : satisfaction : %d\n", clients[i].numero, clients[i].satisfaction);
+            }
         }
-
-        // affichage();
-
+        //fonction d'affichage
         while (nbClientsIn > 0 || !start) {
           affichage();
           sleep(1);
           debut = time(NULL);
-
         }
-
 
         for (int i = 0; i < nbClients; i++) {
             pthread_join(clients[i].thread, NULL);
         }
         affichage();
         printf("Nombre de clients aujourd'hui: %d\n", nbClients);
-
-
-
-        printf("Nombre de clients aujourd'hui: %d\n", nbClients);
-
 
         caisse= caisse+caisseJour;
         nbClientsIn = 0;
@@ -213,13 +203,6 @@ int main(int argc, char const *argv[]) {
         printf("Jour suivant ? (o/n) \n");
         scanf(" %c", &prochainJour);
     } while  (prochainJour == 'o');
-    // en fonction du taux de satisfaction => si inf à 50 : 1/2 de revenir etc
-    //TODO déterminer les horraires du parc (pas de 24h/24)
-
-
-    //Fin de la journée
-
-
 
     printf("Caisse du parc au bout de %d jour(s): %d € \n",nbJour, caisse);
     return 0;
