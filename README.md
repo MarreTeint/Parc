@@ -1,29 +1,29 @@
-# Simulation d'un parc d'attraction
-Projet en C réalisé au sein de Polytech Paris Saclay
+# Simulation of an amusement park
+C project carried out at Polytech Paris Saclay
 
-## Sujet
-Dans ce projet, nous considérons un parc d’attraction comportant les zones suivantes :
+## Subject
+In this project, we consider an amusement park with the following zones:
 
-- Une entrée par laquelle les visiteurs passent obligatoirement pour entrer et sortir du parc. Au
-moment d’entrer dans le parc, chaque visiteur doit régler la somme de 30€. Nous précisons que
-toute sortie est définitive.
+- An entrance through which visitors must pass to enter and exit the park. At
+When entering the park, each visitor must pay the sum of 30€. We specify that
+all exits are final.
 
-- Des allées permettant aux visiteurs de se rendre aux différentes attractions. Les visiteurs
-peuvent rester autant de temps qu’ils le souhaitent dans les allées du parc.
+- Aisles allowing visitors to get to the various attractions. Visitors can stay as long as
+Visitors can stay as long as they wish in the park's alleys.
 
-- Les attractions dites « libres » auxquelles les visiteurs peuvent accéder librement, sans faire la
-queue, et où ils peuvent rester le temps qu’ils souhaitent. Ces attractions peuvent être, par
-exemple, des animations. Nous considérons, dans cet exercice, que ce type d’attractions ne
-possède pas de limite au niveau du nombre de ses visiteurs.
+- The so-called "free" attractions where visitors can access freely, without queuing, and where they can stay for as long as they wish.
+without queuing, and where they can stay as long as they wish. These attractions can be, for example
+These attractions can be, for example, animations. In this exercise, we consider that this type of attraction has no limit to the number of visitors.
+We consider in this exercise that this type of attraction does not have a limit to the number of its visitors.
 
-- Les attractions dites « contrôlées » pour lesquelles les visiteurs doivent faire la queue. Nous
-précisons que les visiteurs sortent de la queue pour entrer dans l’attraction dans le même ordre
-qu’ils y sont entrés. Bien sûr, une attraction de ce type ne peut admettre qu’un nombre limité
-de visiteurs. Contrairement aux attractions « libres », une fois entrés dans une attraction
-« contrôlée », les visiteurs sont contraints d’y rester le temps que dure celle-ci. Cependant,
-chaque visiteur ayant un certain niveau de patience, si le temps passé à faire la queue est trop
-long cela affectera son niveau de satisfaction et les chances qu’il revienne dans le parc.
+- Controlled" attractions for which visitors have to queue. We
+We specify that visitors leave the queue to enter the attraction in the same order as they entered it.
+as they entered. Of course, an attraction of this type can only admit a limited number of visitors.
+of visitors. In contrast to 'free' attractions, once they have entered a 'controlled' attraction, visitors are
+Unlike "free" attractions, once visitors enter a "controlled" attraction, they are obliged to stay for the duration of the attraction. However,
+However, as each visitor has a certain level of patience, if the time spent queuing is too long it will
+However, each visitor has a certain level of patience, so if the time spent queuing is too long it will affect their level of satisfaction and the chances of them returning to the park.
 
-Nous concevrons donc un programme qui simule une journée de
-fonctionnement pour un tel parc d’attraction. Celui-ci permettra de voir les recettes réalisées ainsi que
-le niveau de satisfaction des visiteurs.
+We will therefore design a program that simulates a day of operation for such an amusement park.
+for such an amusement park. This will allow us to see the revenue generated as well as the level of
+the level of satisfaction of the visitors.
